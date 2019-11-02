@@ -145,7 +145,7 @@
                 return;
             }
             $.ajax({
-                url: '/api.php?act=code&codetype=' + $("#codetype").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
+                url: '/api.php?act=code&codetype=' + $("#codetype").val() + '&connect=' + $("#select_database").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
