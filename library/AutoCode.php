@@ -18,7 +18,6 @@ class AutoCode
         }
         $needControllerFunctions = ['index', 'show', 'store', 'update', 'destory']; // 需要显示的方法路由表
         $apidocText = '';
-
         $responseShow = '';
         $responseIndex = '';
         if (in_array('response', $ext)) {
@@ -64,7 +63,6 @@ class AutoCode
                             continue;
                         }
                         $datatypeLength = 0;
-                        $kvData = '';
                         if (count(explode('(', $type)) > 1) {
                             $datatype = explode('(', $type)[0];
                             $datatypeLength = str_replace(')', '', explode('(', $type)[1]);
@@ -74,33 +72,12 @@ class AutoCode
                         } else {
                             $datatype = $type;
                         }
-                        switch ($datatype) {
-                            case 'int':
-                            case 'tinyint':
-                            case 'decimal':
-                                $kvData .= 'numeric';
-                                if (in_array($datatype, ['int', 'tinyint'])) {
-                                }
-                                break;
-                            case 'varchar':
-                                break;
-                            case 'timestamp':
-                                $kvData .= 'date';
-                                break;
-                            case 'json':
-                                $kvData .= 'json';
-                                break;
-                        }
-                        $requestData[$field] = [
-                            'data' => $kvData,
-                            'colum' => $item
-                        ];
                         if ($item['Key'] == 'PRI') {
                             $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . $tableInfo['Comment'] . '的ID';
                         } else if (is_null($item['Default'])) {
                             $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
                         } else {
-                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . (is_null($item['Default']) ? '' : '=' . $item['Default']) . '] ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
+                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . (is_null($item['Default']) ? '' : '=' . (is_numeric($item['Default']) ? $item['Default'] * 1 : '')) . '] ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
                         }
                     }
                     $apidocText .= '
@@ -122,9 +99,7 @@ class AutoCode
     /**
      * @api {post} /' . $tableName . ' 添加' . $tableInfo['Comment'] . '
      * @apiName store_' . $tableName . '
-     * @apiGroup ' . $tableMaxName . '';
-
-
+     * @apiGroup ' . $tableMaxName;
                     foreach ($fullFields as $item) {
                         $field = $item['Field'];
                         $type = $item['Type'];
@@ -133,7 +108,6 @@ class AutoCode
                             continue;
                         }
                         $datatypeLength = 0;
-                        $kvData = '';
                         if (count(explode('(', $type)) > 1) {
                             $datatype = explode('(', $type)[0];
                             $datatypeLength = str_replace(')', '', explode('(', $type)[1]);
@@ -143,27 +117,6 @@ class AutoCode
                         } else {
                             $datatype = $type;
                         }
-                        switch ($datatype) {
-                            case 'int':
-                            case 'tinyint':
-                            case 'decimal':
-                                $kvData .= 'numeric';
-                                if (in_array($datatype, ['int', 'tinyint'])) {
-                                }
-                                break;
-                            case 'varchar':
-                                break;
-                            case 'timestamp':
-                                $kvData .= 'date';
-                                break;
-                            case 'json':
-                                $kvData .= 'json';
-                                break;
-                        }
-                        $requestData[$field] = [
-                            'data' => $kvData,
-                            'colum' => $item
-                        ];
                         if (is_null($item['Default']) && $item['Key'] == '') {
                             $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
                         } else if (!empty($item['Default'])) {
@@ -243,7 +196,6 @@ class AutoCode
                     break;
             }
         }
-
         return $apidocText;
     }
 
