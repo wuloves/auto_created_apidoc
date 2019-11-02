@@ -21,7 +21,6 @@ class AutoCode
 
         $responseShow = '';
         $responseIndex = '';
-
         if (in_array('response', $ext)) {
             $rowData = $tableAllInfo['db']->query(" SELECT * FROM `" . $tableName . "` LIMIT 0,1")->row;
             if (!empty($rowData)) {
@@ -96,8 +95,13 @@ class AutoCode
                             'data' => $kvData,
                             'colum' => $item
                         ];
-                        $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . '] ' . $comment . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
-                        $apidocText .= '';
+                        if ($item['Key'] == 'PRI') {
+                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . $tableInfo['Comment'] . '的ID';
+                        } else if (is_null($item['Default'])) {
+                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
+                        } else {
+                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . (is_null($item['Default']) ? '' : '=' . $item['Default']) . '] ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
+                        }
                     }
                     $apidocText .= '
      *
@@ -118,8 +122,55 @@ class AutoCode
     /**
      * @api {post} /' . $tableName . ' 添加' . $tableInfo['Comment'] . '
      * @apiName store_' . $tableName . '
-     * @apiGroup ' . $tableMaxName . '
-     * @apiParam {int} id ' . $tableInfo['Comment'] . '的ID
+     * @apiGroup ' . $tableMaxName . '';
+
+
+                    foreach ($fullFields as $item) {
+                        $field = $item['Field'];
+                        $type = $item['Type'];
+                        $comment = $item['Comment'];
+                        if (in_array($field, ['updated_at', 'created_at'])) {
+                            continue;
+                        }
+                        $datatypeLength = 0;
+                        $kvData = '';
+                        if (count(explode('(', $type)) > 1) {
+                            $datatype = explode('(', $type)[0];
+                            $datatypeLength = str_replace(')', '', explode('(', $type)[1]);
+                            if (str_replace(',', '', $datatypeLength) != $datatypeLength) {
+                                $datatypeLength = 0;
+                            }
+                        } else {
+                            $datatype = $type;
+                        }
+                        switch ($datatype) {
+                            case 'int':
+                            case 'tinyint':
+                            case 'decimal':
+                                $kvData .= 'numeric';
+                                if (in_array($datatype, ['int', 'tinyint'])) {
+                                }
+                                break;
+                            case 'varchar':
+                                break;
+                            case 'timestamp':
+                                $kvData .= 'date';
+                                break;
+                            case 'json':
+                                $kvData .= 'json';
+                                break;
+                        }
+                        $requestData[$field] = [
+                            'data' => $kvData,
+                            'colum' => $item
+                        ];
+                        if (is_null($item['Default']) && $item['Key'] == '') {
+                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
+                        } else if (!empty($item['Default'])) {
+                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . (is_null($item['Default']) ? '' : '=' . $item['Default']) . '] ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
+                        }
+                    }
+                    $apidocText .= '
      * @apiSuccess {type} field 默认同资源详情
      * @apiSuccessExample 成功返回：
      * HTTP/1.1 201 Created
@@ -131,6 +182,7 @@ class AutoCode
      * 记录不存在
      *
      */' . PHP_EOL . PHP_EOL . PHP_EOL;
+
                     break;
 
                 case 'show':
