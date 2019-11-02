@@ -1,0 +1,279 @@
+<html>
+<head>
+    <title>[文档/代码]自动生成</title>
+</head>
+<body style="">
+<table class="table_wu" style="width: 100%;height: 100%;font-size: 16px;">
+    <thead>
+    <tr>
+        <td style="width: 200px;">
+            <select id="select_database">
+            </select>
+        </td>
+        <td>
+            自动化文档生成工具
+        </td>
+    </tr>
+    <tr class="addmysql_table" style="display: none;">
+        <td colspan="2">
+            <table class="table_wu" style="width: 100%;height: 100%;font-size: 16px;">
+                <thead>
+                <tr>
+                    <td colspan="2">配置Mysql连接信息</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>配置名称</td>
+                    <td><input name="addmysql_config_name" value="" placeholder="配置名称"></td>
+                </tr>
+                <tr>
+                    <td>Mysql 地址</td>
+                    <td><input name="addmysql_localhost" value="" placeholder="localhost"></td>
+                </tr>
+                <tr>
+                    <td>用户名</td>
+                    <td><input name="addmysql_username" value="" placeholder="username"></td>
+                </tr>
+                <tr>
+                    <td>密码</td>
+                    <td><input name="addmysql_password" value="" placeholder="password"></td>
+                </tr>
+                <tr>
+                    <td>端口</td>
+                    <td><input name="addmysql_port" value="3306" placeholder="port default(3306)"></td>
+                </tr>
+                <tr>
+                    <td>数据库</td>
+                    <td><input name="addmysql_database" value="" placeholder="database"></td>
+                </tr>
+                <tr>
+                    <td id="addmysql_error" style="color: red;"></td>
+                    <td><input type="button" value="测试并添加" id="addmysql_test_add"></td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    <tr class="doc_table">
+        <td style="width: 100px;">
+            <input placeholder="输入表名进行搜索" id="filter_tables">
+        </td>
+        <td>
+            <select style="width: 100%;" id="codetype">
+                <option value=""> -- 请选择生成代码类型 --</option>
+                <option value="apidoc"> -- Apidoc --</option>
+                <option value=""> -- Controller (www) --</option>
+                <option value=""> -- Controller (admin) --</option>
+                <option value=""> -- Controller (serve) --</option>
+                <option value=""> -- Markdown (Model) --</option>
+            </select>
+        </td>
+    </tr>
+    </thead>
+    <tbody class="doc_table">
+    <tr>
+        <td>
+            <select multiple="multiple" style="height: 100%;" id="show_tables">
+            </select>
+        </td>
+        <td>
+            <textarea style="width: 100%;height: 100%;" id="show_textarea"></textarea>
+        </td>
+    </tr>
+    </tbody>
+
+</table>
+
+
+<script src="jquery-3.4.1.min.js"></script>
+<script>
+    v = {
+        getDbSelect: function () {
+            $.ajax({
+                url: '/api.php?act=db_list&_=' + (new Date()).valueOf(),
+                type: 'get',
+                dataType: "json",
+                success: function (JsonData) {
+                    var t = '';
+                    var i = 0;
+                    var selectedValue = 'add';
+                    for (var k in JsonData) {
+                        if (i == 0) {
+                            selectedValue = k;
+                        }
+                        t += '<option value="' + k + '" ' + (i == 0 ? 'selected' : '') + '>' + JsonData[k] + '</option>';
+                        i++;
+                    }
+                    t += '<option value="add" ' + (i == 0 ? 'selected' : '') + '> -- 添加数据库连接 --</option>';
+                    $("#select_database").html(t);
+                    $("#select_database").change();
+                },
+                error: function (e) {
+                    $("#select_database").html('<option>请求异常, 请刷新</option>');
+                }
+            });
+        },
+        variable_all_tables: [],
+        getAllTable: function () {
+            $("#show_tables").html('');
+            $.ajax({
+                url: '/api.php?act=table&_=' + (new Date()).valueOf(),
+                type: 'get',
+                dataType: "json",
+                success: function (JsonData) {
+                    v.variable_all_tables = JsonData;
+                    v.getFilter();
+                },
+                error: function (e) {
+
+                }
+            });
+        },
+        getFilter: function () {
+            var a = '';
+            var tt = '';
+            var fb = $("#filter_tables").val();
+            var JsonData = v.variable_all_tables;
+            for (var t in JsonData) {
+                tt = JsonData[t]
+                if (fb == '' || tt.replace(fb, '') != tt) {
+                    a += '<option value="' + tt + '">' + tt + '</option>';
+                }
+            }
+            $("#show_tables").html(a);
+        },
+        getApiTextarea: function () {
+            $("#show_textarea").val('没有数据');
+            if ($("#show_tables").val() == '') {
+                return;
+            }
+            $.ajax({
+                url: '/api.php?act=code&codetype=' + $("#codetype").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
+                type: 'get',
+                dataType: "json",
+                success: function (JsonData) {
+                    $("#show_textarea").val(JsonData.data)
+                },
+                error: function (e) {
+                    console.log(e);
+                }
+            });
+        }
+    };
+    $(function () {
+        $("#select_database").change(function () {
+            console.log(this.value);
+            console.log($("#select_database").val());
+            switch (this.value) {
+                case 'add':
+                    $(".addmysql_table").show()
+                    $(".doc_table").hide();
+                    break;
+                default:
+                    $(".addmysql_table").hide()
+                    $(".doc_table").show();
+                    v.getAllTable();
+            }
+        });
+
+        $("#filter_tables").bind('input propertychange', function () {
+            v.getFilter();
+        });
+        $("#show_tables").click(function () {
+            v.getApiTextarea();
+        });
+        $("#doc_type").change(function () {
+            v.getApiTextarea();
+        });
+        $("#addmysql_test_add").click(function () {
+            $("#addmysql_error").html('');
+            if (
+                $('input[name="addmysql_config_name"]').val() == ''
+                || $('input[name="addmysql_localhost"]').val() == ''
+                || $('input[name="addmysql_username"]').val() == ''
+                || $('input[name="addmysql_password"]').val() == ''
+                || $('input[name="addmysql_port"]').val() == ''
+                || $('input[name="addmysql_database"]').val() == ''
+            ) {
+                $("#addmysql_error").html('配置未填写完整');
+                return;
+            }
+            $.ajax({
+                url: '/api.php?act=db_add&_=' + (new Date()).valueOf(),
+                type: 'post',
+                data: {
+                    addmysql_config_name: $('input[name="addmysql_config_name"]').val(),
+                    addmysql_localhost: $('input[name="addmysql_localhost"]').val(),
+                    addmysql_username: $('input[name="addmysql_username"]').val(),
+                    addmysql_password: $('input[name="addmysql_password"]').val(),
+                    addmysql_port: $('input[name="addmysql_port"]').val(),
+                    addmysql_database: $('input[name="addmysql_database"]').val(),
+                },
+                dataType: "json",
+                success: function (JsonData) {
+                    var t = '';
+                    var i = 0;
+                    var selectedValue = 'add';
+                    for (var k in JsonData) {
+                        if (i == 0) {
+                            selectedValue = k;
+                        }
+                        t += '<option value="' + k + '" ' + (i == 0 ? 'selected' : '') + '>' + JsonData[k] + '</option>';
+                        i++;
+                    }
+                    t += '<option value="add" ' + (i == 0 ? 'selected' : '') + '> -- 添加数据库连接 --</option>';
+                    $("#select_database").html(t);
+                    $("#select_database").change();
+                },
+                error: function (e) {
+                    console.log(e.responseJSON.message);
+                    $("#addmysql_error").html(e.responseJSON.message);
+                    $("#select_database").html('<option>' + e.responseJSON.message + '</option>');
+                }
+            });
+        })
+        v.getDbSelect();
+    })
+</script>
+
+<style>
+    .table_wu > tbody > tr > td,
+    .table_wu > tbody > tr > th,
+    .table_wu > tfoot > tr > td,
+    .table_wu > tfoot > tr > th,
+    .table_wu > thead > tr > td,
+    .table_wu > thead > tr > th {
+        border: 1px solid #ddd;
+        padding: 10px;
+        font-size: 16px;
+        text-align: center;
+    }
+
+    .table_wu {
+        border: 1px solid #ddd;
+        border-collapse: collapse;
+        border-spacing: 0;
+        max-width: 100%;
+        background-color: #fff;
+    }
+
+    .table-wu-responsive {
+        overflow-y: hidden;
+        min-height: .01%;
+        overflow-x: auto;
+    }
+
+    .table-wu-responsive > table {
+        margin: 10px;
+    }
+
+    select, input {
+        width: 100%;
+        font-size: 16px;
+        height: 50px;
+        padding: 10px;
+    }
+</style>
+</body>
+</html>
