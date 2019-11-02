@@ -27,7 +27,6 @@ exit;
         foreach ($configDb as $key => $item) {
             $configSelect[$key] = $item['config_name'];
         }
-        var_dump($configDb);
     }
 }
 
