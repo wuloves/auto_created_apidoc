@@ -29,11 +29,11 @@
                 </tr>
                 <tr>
                     <td>Mysql 地址</td>
-                    <td><input name="addmysql_localhost" value="" placeholder="localhost"></td>
+                    <td><input name="addmysql_localhost" value="localhost" placeholder="localhost"></td>
                 </tr>
                 <tr>
                     <td>用户名</td>
-                    <td><input name="addmysql_username" value="" placeholder="username"></td>
+                    <td><input name="addmysql_username" value="root" placeholder="username"></td>
                 </tr>
                 <tr>
                     <td>密码</td>
@@ -62,11 +62,7 @@
         <td>
             <select style="width: 100%;" id="codetype">
                 <option value=""> -- 请选择生成代码类型 --</option>
-                <option value="apidoc"> -- Apidoc --</option>
-                <option value=""> -- Controller (www) --</option>
-                <option value=""> -- Controller (admin) --</option>
-                <option value=""> -- Controller (serve) --</option>
-                <option value=""> -- Markdown (Model) --</option>
+                <option value="apidoc" selected> -- Apidoc --</option>
             </select>
         </td>
     </tr>
@@ -74,7 +70,7 @@
     <tbody class="doc_table">
     <tr>
         <td>
-            <select multiple="multiple" style="height: 100%;" id="show_tables">
+            <select multiple="multiple" style="height: 100%;width: 200px;" id="show_tables">
             </select>
         </td>
         <td>
@@ -118,7 +114,7 @@
         getAllTable: function () {
             $("#show_tables").html('');
             $.ajax({
-                url: '/api.php?act=table&_=' + (new Date()).valueOf(),
+                url: '/api.php?act=table&connect=' + $("#select_database").val() + '&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -180,12 +176,15 @@
         $("#filter_tables").bind('input propertychange', function () {
             v.getFilter();
         });
+
         $("#show_tables").click(function () {
             v.getApiTextarea();
         });
-        $("#doc_type").change(function () {
+
+        $("#codetype").change(function () {
             v.getApiTextarea();
         });
+
         $("#addmysql_test_add").click(function () {
             $("#addmysql_error").html('');
             if (
@@ -234,6 +233,10 @@
             });
         })
         v.getDbSelect();
+        $('input[name="addmysql_config_name"]').val(function () {
+            var s = Date.parse(new Date());
+            return s;
+        });
     })
 </script>
 
