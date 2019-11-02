@@ -1,0 +1,2 @@
+# auto_created_apidoc
+自动根据表创建apidoc文档内容
