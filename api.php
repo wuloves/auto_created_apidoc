@@ -80,23 +80,33 @@ switch (Request::get('act', '')) {
     case 'code':
         $allTables = DBInfo::db($db)->getTable();
         $table = Request::get('table');
-        if (!in_array($table, $allTables)) {
-            return Response::error('table[' . $table . '] 不存在');
+        $errorTable = [];
+        $tableList = explode(',', $table);
+        foreach ($tableList as $tableItem) {
+            if (!in_array($tableItem, $allTables)) {
+                $errorTable[] = $tableItem;
+            }
         }
-        $tableInfo = DBInfo::db($db)->getTable($table);
-        $tableAllInfo = [
-            'table_name' => $table,
-            'full_fields' => $tableInfo,
-            'table_info' => $db->query("SHOW TABLE STATUS FROM `" . $db->getDatabaseName() . "` LIKE '" . $table . "'")->row,
-            'db' => $db,
+        if (!empty($errorTable)) {
+            return Response::error('table[' . $errorTable . '] 不存在');
+        }
+        $data = '';
+        foreach ($tableList as $table) {
+            $tableInfo = DBInfo::db($db)->getTable($table);
+            $tableAllInfo = [
+                'table_name' => $table,
+                'full_fields' => $tableInfo,
+                'table_info' => $db->query("SHOW TABLE STATUS FROM `" . $db->getDatabaseName() . "` LIKE '" . $table . "'")->row,
+                'db' => $db,
 
-        ];
-        $data = '请选择 输出数据类型';
-        switch (Request::get('codetype', '')) {
-            case 'apidoc':
-                $data = AutoCode::apidoc($tableAllInfo, ['response']);
-                break;
-            default:
+            ];
+            switch (Request::get('codetype', '')) {
+                case 'apidoc':
+                    $data .= AutoCode::apidoc($tableAllInfo, ['response']);
+                    break;
+                default:
+                    $data .= '请选择 输出数据类型';
+            }
         }
         return Response::item(['data' => $data]);
         break;
