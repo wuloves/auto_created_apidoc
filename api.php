@@ -10,20 +10,28 @@ require 'library/AutoCode.php';
 
 $configPath = 'db_config.php';
 
-function getDbConfigs($configPath, &$configDb, &$configSelect)
+function getDbConfigs($configPath, &$configDb, &$configSelect, &$safeChar)
 {
+    // 如果觉得不需要考虑本地的数据被暴露的风险, 可以将其值设为空字符
+    $safeChar = '<?php
+exit;
+// ';
     $configDb = [];
     $configSelect = [];
     if (file_exists($configPath)) {
-        $configDb = file_get_contents($configPath);
+        $configDb = file_get_contents($configPath, null, null, strlen($safeChar));
         $configDb = json_decode($configDb, true);
+        if (empty($configDb)) {
+            $configDb = [];
+        }
         foreach ($configDb as $key => $item) {
             $configSelect[$key] = $item['config_name'];
         }
+        var_dump($configDb);
     }
 }
 
-getDbConfigs($configPath, $configDb, $configSelect);
+getDbConfigs($configPath, $configDb, $configSelect, $safeChar);
 
 
 switch (Request::get('act', '')) {
@@ -53,7 +61,7 @@ switch (Request::get('act', '')) {
         $now = $db->query('SELECT NOW() now')->row['now'];
         $configItem['created_at'] = $now;
         $configDb[$configDbKey] = $configItem;
-        file_put_contents($configPath, json_encode($configDb, 256));
+        file_put_contents($configPath, $safeChar . json_encode($configDb, 256));
         getDbConfigs($configPath, $configDb, $configSelect);
         return Response::item($configSelect);
         break;
