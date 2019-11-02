@@ -31,8 +31,6 @@ exit;
 }
 
 getDbConfigs($configPath, $configDb, $configSelect, $safeChar);
-
-
 switch (Request::get('act', '')) {
     case 'db_list':
         return Response::item($configSelect);
@@ -61,7 +59,7 @@ switch (Request::get('act', '')) {
         $configItem['created_at'] = $now;
         $configDb[$configDbKey] = $configItem;
         file_put_contents($configPath, $safeChar . json_encode($configDb, 256));
-        getDbConfigs($configPath, $configDb, $configSelect);
+        getDbConfigs($configPath, $configDb, $configSelect, $safeChar);
         return Response::item($configSelect);
         break;
 }
