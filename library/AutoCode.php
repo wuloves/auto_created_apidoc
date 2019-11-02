@@ -116,7 +116,7 @@ class AutoCode
                 case 'store':
                     $apidocText .= '
     /**
-     * @api {post} /' . $tableName . '/{id} 新建' . $tableInfo['Comment'] . '
+     * @api {post} /' . $tableName . ' 添加' . $tableInfo['Comment'] . '
      * @apiName store_' . $tableName . '
      * @apiGroup ' . $tableMaxName . '
      * @apiParam {int} id ' . $tableInfo['Comment'] . '的ID
