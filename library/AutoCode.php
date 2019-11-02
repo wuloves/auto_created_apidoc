@@ -13,11 +13,12 @@ class AutoCode
         $tableMaxName = ucfirst($tableMaxName);
         $tableInfo = $tableAllInfo['table_info'];
         $tableInfo['Comment'] = str_replace('表', '', $tableInfo['Comment']);
+        if (empty($tableInfo['Comment'])) {
+            $tableInfo['Comment'] = $tableMaxName;
+        }
         $needControllerFunctions = ['index', 'show', 'store', 'update', 'destory']; // 需要显示的方法路由表
         $apidocText = '';
 
-
-        $response = '';
         $responseShow = '';
         $responseIndex = '';
 
@@ -115,8 +116,8 @@ class AutoCode
                 case 'store':
                     $apidocText .= '
     /**
-     * @api {get} /' . $tableName . '/{id} 新建' . $tableInfo['Comment'] . '
-     * @apiName show_' . $tableName . '
+     * @api {post} /' . $tableName . '/{id} 新建' . $tableInfo['Comment'] . '
+     * @apiName store_' . $tableName . '
      * @apiGroup ' . $tableMaxName . '
      * @apiParam {int} id ' . $tableInfo['Comment'] . '的ID
      * @apiSuccess {type} field 默认同资源详情
@@ -154,7 +155,7 @@ class AutoCode
                 case 'update':
                     $apidocText .= '
     /**
-     * @api {get} /' . $tableName . '/{id} 更新' . $tableInfo['Comment'] . '
+     * @api {patch} /' . $tableName . '/{id} 更新' . $tableInfo['Comment'] . '
      * @apiName update_' . $tableName . '
      * @apiGroup ' . $tableMaxName . '
      * @apiParam {int} id ' . $tableInfo['Comment'] . '的ID
@@ -173,8 +174,8 @@ class AutoCode
                 case 'destory':
                     $apidocText .= '
     /**
-     * @api {get} /' . $tableName . '/{id} 删除' . $tableInfo['Comment'] . '
-     * @apiName show_' . $tableName . '
+     * @api {delete} /' . $tableName . '/{id} 删除' . $tableInfo['Comment'] . '
+     * @apiName destory_' . $tableName . '
      * @apiGroup ' . $tableMaxName . '
      * @apiParam {int} id ' . $tableInfo['Comment'] . '的ID
      * @apiSuccess {type} field 默认同资源详情
