@@ -14,8 +14,9 @@ function getDbConfigs($configPath, &$configDb, &$configSelect, &$safeChar)
 {
     // 如果觉得不需要考虑本地的数据被暴露的风险, 可以将其值设为空字符
     $safeChar = '<?php
+echo \'<h1>PHP[文档/代码]自动生成配置文件</h1>\';
 exit;
-// ';
+//  ';
     $configDb = [];
     $configSelect = [];
     if (file_exists($configPath)) {
