@@ -104,6 +104,9 @@ switch (Request::get('act', '')) {
                 case 'apidoc':
                     $data .= AutoCode::apidoc($tableAllInfo, ['response']);
                     break;
+                case 'markdown_doc':
+                    $data .= AutoCode::markdownDoc($tableAllInfo, ['response']);
+                    break;
                 default:
                     $data .= '请选择 输出数据类型';
             }
