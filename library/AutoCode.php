@@ -317,7 +317,8 @@ POST
 ' . $baseUrl . '
 ```
 
-';
+| 字段 | 类型 | 描述 |
+| -------- | ----- | ----- |';
                     foreach ($fullFields as $item) {
                         $field = $item['Field'];
                         $type = $item['Type'];
