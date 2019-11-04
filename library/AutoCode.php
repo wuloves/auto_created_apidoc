@@ -23,7 +23,7 @@ class AutoCode
         if (in_array('response', $ext)) {
             $rowData = $tableAllInfo['db']->query(" SELECT * FROM `" . $tableName . "` LIMIT 0,1")->row;
             if (!empty($rowData)) {
-                $responseShow = Response::jsonBeautify($rowData);
+                $responseShow = Response::jsonBeautify($rowData, '     *');
                 $rowData2 = [
                     'data' => [
                         $rowData
@@ -39,7 +39,7 @@ class AutoCode
                         ]
                     ]
                 ];
-                $responseIndex = Response::jsonBeautify($rowData2);
+                $responseIndex = Response::jsonBeautify($rowData2, '     *');
                 unset($rowData);
                 unset($rowData2);
             }
@@ -85,7 +85,7 @@ class AutoCode
      * @apiSuccess {type} field desc
      * @apiSuccessExample 成功返回：
      * HTTP/1.1 200 OK
-     * ' . $responseIndex . '
+' . $responseIndex . '
      *
      * @apiError {type} field desc
      * @apiErrorExample 失败返回：
@@ -148,7 +148,7 @@ class AutoCode
      * @apiSuccess {type} field 默认同资源详情
      * @apiSuccessExample 成功返回：
      * HTTP/1.1 200 OK
-     * ' . $responseShow . '
+' . $responseShow . '
      *
      * @apiError {type} field desc
      * @apiErrorExample 失败返回：

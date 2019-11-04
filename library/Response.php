@@ -42,14 +42,14 @@ class Response
         exit;
     }
 
-    public static function jsonBeautify($json)
+    public static function jsonBeautify($json, $beforeAdd = '')
     {
         $result = '';
         $level = 0;
         $prev_char = '';
         $in_quotes = false;
         $ends_line_level = NULL;
-        if (is_array($json)){
+        if (is_array($json)) {
             $json = json_encode($json, 256);
         }
         $json_length = strlen($json);
@@ -100,6 +100,15 @@ class Response
             $result .= $char . $post;
             $prev_char = $char;
         }
+        if (!empty($beforeAdd)) {
+            $result1 = $result;
+            $result = [];
+            foreach (explode("\n", $result1) as $item) {
+                $result[] = $beforeAdd . $item;
+            }
+            $result = implode("\n", $result);
+        }
+
         return $result;
     }
 
