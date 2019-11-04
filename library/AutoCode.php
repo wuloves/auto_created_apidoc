@@ -75,9 +75,9 @@ class AutoCode
                         if ($item['Key'] == 'PRI') {
                             $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . $tableInfo['Comment'] . '的ID';
                         } else if (is_null($item['Default'])) {
-                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
+                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '');
                         } else {
-                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . (is_null($item['Default']) ? '' : '=' . (is_numeric($item['Default']) ? $item['Default'] * 1 : $item['Default'])) . '] ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
+                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . (is_null($item['Default']) ? '' : '=' . (is_numeric($item['Default']) ? $item['Default'] * 1 : $item['Default'])) . '] ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '');
                         }
                     }
                     $apidocText .= '
@@ -118,9 +118,9 @@ class AutoCode
                             $datatype = $type;
                         }
                         if (is_null($item['Default']) && $item['Key'] == '') {
-                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
+                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '');
                         } else if (!empty($item['Default'])) {
-                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . (is_null($item['Default']) ? '' : '=' . $item['Default']) . '] ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '');
+                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . (is_null($item['Default']) ? '' : '=' . (is_numeric($item['Default']) ? $item['Default'] * 1 : $item['Default'])) . '] ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '');
                         }
                     }
                     $apidocText .= '
