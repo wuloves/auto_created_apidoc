@@ -219,6 +219,8 @@ class AutoCode
         }
         $baseUrl = '{{url}}/course/' . $tableName;
 
+        $priInfo = self::getPriKeyInfo($fullFields);
+
         $apidocText = '';
         $responseShow = '';
         $responseIndex = '';
@@ -247,6 +249,9 @@ class AutoCode
             }
         }
         $apidocText .= '## ' . $tableInfo['Comment'] . PHP_EOL;
+
+
+        // $needControllerFunctions = [ 'show']; // 需要显示的方法路由表
         foreach ($needControllerFunctions as $needControllerFunction) {
             switch ($needControllerFunction) {
                 case 'index':
@@ -265,7 +270,7 @@ GET
 
 | 字段 | 类型 | 描述 |
 | -------- | ----- | ----- |
-| perPage | number | 每页记录数<br>默认值:<code style="color: #c7254e;font-size: 90%;border-radius: 4px;padding: 2px 4px;">15</code> |';
+| perPage | number | 每页记录数<br>默认值: <code style="color: #c7254e;font-size: 90%;border-radius: 4px;padding: 2px 4px;">15</code> |';
                     foreach ($fullFields as $item) {
                         $field = $item['Field'];
                         $type = $item['Type'];
@@ -286,9 +291,9 @@ GET
                         if ($item['Key'] == 'PRI') {
                             $apidocText .= PHP_EOL . '| ' . $field . ' | ' . $datatype . ' | ' . $tableInfo['Comment'] . '的ID |';
                         } else if (is_null($item['Default'])) {
-                            $apidocText .= PHP_EOL . '| ' . $field . ' | ' . $datatype . ' | ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '') . '|';
+                            $apidocText .= PHP_EOL . '| ' . $field . ' | ' . $datatype . ' | ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '') . '|';
                         } else {
-                            $apidocText .= PHP_EOL . '| ' . $field . ' | ' . $datatype . ' | ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '') . ((is_null($item['Default']) || $item['Default'] == '') ? '' : '<br>默认值:<code style="color: #c7254e;font-size: 90%;border-radius: 4px;padding: 2px 4px;">' . (is_numeric($item['Default']) ? $item['Default'] * 1 : $item['Default']) . '</code>') . ' |';
+                            $apidocText .= PHP_EOL . '| ' . $field . ' | ' . $datatype . ' | ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '') . ((is_null($item['Default']) || $item['Default'] == '') ? '' : '<br>默认值: <code style="color: #c7254e;font-size: 90%;border-radius: 4px;padding: 2px 4px;">' . (is_numeric($item['Default']) ? $item['Default'] * 1 : $item['Default']) . '</code>') . ' |';
                         }
                     }
                     $apidocText .= '
@@ -337,9 +342,9 @@ POST
                             $datatype = $type;
                         }
                         if (is_null($item['Default']) && $item['Key'] == '') {
-                            $apidocText .= PHP_EOL . '| ' . $field . ' | ' . $datatype . ' | ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '') . '|';
+                            $apidocText .= PHP_EOL . '| ' . $field . ' | ' . $datatype . ' | ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '') . '|';
                         } else if (!empty($item['Default'])) {
-                            $apidocText .= PHP_EOL . '| ' . $field . ' | ' . $datatype . ' | ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '长度0-' . $datatypeLength : '') . ((is_null($item['Default']) || $item['Default'] == '') ? '' : '<br>默认值:<code style="color: #c7254e;font-size: 90%;border-radius: 4px;padding: 2px 4px;">' . (is_numeric($item['Default']) ? $item['Default'] * 1 : $item['Default']) . '</code>') . ' |';
+                            $apidocText .= PHP_EOL . '| ' . $field . ' | ' . $datatype . ' | ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '') . ((is_null($item['Default']) || $item['Default'] == '') ? '' : '<br>默认值: <code style="color: #c7254e;font-size: 90%;border-radius: 4px;padding: 2px 4px;">' . (is_numeric($item['Default']) ? $item['Default'] * 1 : $item['Default']) . '</code>') . ' |';
                         }
                     }
                     $apidocText .= '
@@ -365,7 +370,7 @@ HTTP/1.1 404 Not Found
 
 ```
 GET
-' . $baseUrl . '/{id}
+' . $baseUrl . '/{' . (empty($priInfo['Field']) ? 'id' : $priInfo['Field']) . '}
 ```
 
 *   **成功返回**
@@ -373,7 +378,7 @@ GET
 
 | 字段 | 类型 | 描述 |
 | -------- | ----- | ----- |
-| id | int | ' . $tableInfo['Comment'] . '的ID |';
+' . (!empty($priInfo['Field']) ? '| ' . $priInfo['Field'] . ' | ' . $priInfo['Type'] . ' | ' . (empty($priInfo['Comment']) ? $tableInfo['Comment'] . '的ID' : $priInfo['Comment']) . ' |' : '');
                     $apidocText .= '
 
 *   **返回demo**
@@ -397,7 +402,7 @@ HTTP/1.1 404 Not Found
 
 ```
 PATCH
-' . $baseUrl . '/{id}
+' . $baseUrl . '/{' . (empty($priInfo['Field']) ? 'id' : $priInfo['Field']) . '}
 ```
 
 *   **参数请参考列表的成功返回字段**
@@ -424,7 +429,7 @@ HTTP/1.1 404 Not Found
 
 ```
 DELETE
-' . $baseUrl . '/{id}
+' . $baseUrl . '/{' . (empty($priInfo['Field']) ? 'id' : $priInfo['Field']) . '}
 ```
 
 *   **返回demo**
@@ -442,6 +447,16 @@ HTTP/1.1 404 Not Found
             }
         }
         return $apidocText;
+    }
+
+    private static function getPriKeyInfo($fullFields)
+    {
+        foreach ($fullFields as $item) {
+            if ($item['Key'] == 'PRI') {
+                return $item;
+                break;
+            }
+        }
     }
 
 
