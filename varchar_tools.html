@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>字符串工具</title>
+</head>
+<body>
+
+<table class="table_wu" style="width: 100%;height: 100%;font-size: 16px;">
+    <thead>
+    <tr>
+        <td colspan="3">字符串工具</td>
+    </tr>
+    <tr>
+        <td style="width: 200px;">功能选择</td>
+        <td>处理前</td>
+        <td>处理后</td>
+    </tr>
+    <tr>
+        <td style="width: 100px;">说明</td>
+        <td id="left_option_text">
+        </td>
+        <td id="right_option_text">
+        </td>
+    </tr>
+    <tr>
+        <td style="width: 100px;">
+        </td>
+        <td>
+            <input placeholder="" id="left_option" class="text_input">
+        </td>
+        <td>
+            <input placeholder="" id="right_option" class="text_input">
+        </td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>
+            <select multiple="multiple" style="height: 100%;width: 200px;" id="function_select">
+                <option value=""> -- 请选择 -- </option>
+                <option value="column_add">字符串左边增加字符</option>
+            </select>
+        </td>
+        <td>
+            <textarea style="width: 100%;height: 100%;min-height: 666px;" id="left_textarea"
+                      class="text_input">// 成功消息
+{
+    "message": "签到成功",
+    "code": 1,
+    "status_code": 200
+}
+// 异常消息
+{
+    "message": "重复签到, 第一次签到时间为2019-07-15 15:39:51",
+    "code": 1,
+    "status_code": 422
+}
+{
+    "message": "课程id未提供",
+    "code": 1,
+    "status_code": 422
+}
+{
+    "message": "身份证为空",
+    "code": 1,
+    "status_code": 422
+}
+{
+    "message": "课程不存在",
+    "code": 1,
+    "status_code": 422
+}
+{
+    "message": "服务间查询身份证信息意外中断, 请重试",
+    "code": 1,
+    "status_code": 422
+}
+{
+    "message": "未找到该身份证的用户",
+    "code": 1,
+    "status_code": 422
+}</textarea>
+        </td>
+        <td>
+            <textarea style="width: 100%;height: 100%;min-height: 666px;" id="right_textarea"
+                      class="text_input"></textarea>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<script src="jquery-3.4.1.min.js"></script>
+<script>
+
+    $(function () {
+        $("#function_select").bind('change', function () {
+            console.log($("#function_select").val()[0]);
+            $("#right_textarea").val('');
+            $("#left_option_text").html('');
+            switch ($("#function_select").val()[0]) {
+                case 'column_add':
+                    $("#left_option_text").html('字符串左边增加的字符');
+                    $("#left_option").attr('placeholder', '字符串左边增加的字符');
+                    $("#right_option").attr('placeholder', '');
+                    $("#left_textarea").attr('placeholder', '');
+                    $("#right_textarea").attr('placeholder', '');
+                    $("#left_option").val('     * ');
+                    break;
+                default:
+                    $("#left_option").attr('placeholder', '');
+                    $("#right_option").attr('placeholder', '');
+                    $("#left_textarea").attr('placeholder', '');
+                    $("#right_textarea").attr('placeholder', '');
+            }
+            $("#left_option").trigger('input');
+        })
+        $(".text_input").bind('input propertychange', function () {
+            console.log($("#function_select").val()[0]);
+            switch ($("#function_select").val()[0]) {
+                case 'column_add':
+                    var left_option = $("#left_option").val();
+                    var right_textarea_value = '';
+                    var rt = $("#left_textarea").val().split("\n");
+                    for (var k in rt){
+                        right_textarea_value += left_option + rt[k] + "\n";
+                    }
+                    $("#right_textarea").val(right_textarea_value);
+                    break;
+                default:
+
+            }
+        })
+        $("#function_select").val('column_add');
+        // $("#function_select").input();
+        $("#left_option").trigger('oninput');
+
+    })
+
+
+</script>
+
+<style>
+    .table_wu > tbody > tr > td,
+    .table_wu > tbody > tr > th,
+    .table_wu > tfoot > tr > td,
+    .table_wu > tfoot > tr > th,
+    .table_wu > thead > tr > td,
+    .table_wu > thead > tr > th {
+        border: 1px solid #ddd;
+        padding: 10px;
+        font-size: 16px;
+        text-align: center;
+    }
+
+    .table_wu {
+        border: 1px solid #ddd;
+        border-collapse: collapse;
+        border-spacing: 0;
+        max-width: 100%;
+        background-color: #fff;
+    }
+
+    .table-wu-responsive {
+        overflow-y: hidden;
+        min-height: .01%;
+        overflow-x: auto;
+    }
+
+    .table-wu-responsive > table {
+        margin: 10px;
+    }
+
+    select, input {
+        width: 100%;
+        font-size: 16px;
+        height: 50px;
+        /*padding: 10px;*/
+    }
+</style>
+
+</body>
+</html>
