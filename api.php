@@ -1,9 +1,11 @@
 <?php
 
 date_default_timezone_set('Asia/Shanghai');
+define('BASE_PATH', __DIR__);
 
 require 'library/DB.php';
 require 'library/DBInfo.php';
+require 'library/DBTable.php';
 require 'library/Request.php';
 require 'library/Response.php';
 require 'library/AutoCode.php';
@@ -81,6 +83,7 @@ switch (Request::get('act', '')) {
     case 'code':
         $allTables = DBInfo::db($db)->getTable();
         $table = Request::get('table');
+        // 表存在检查
         $errorTable = [];
         $tableList = explode(',', $table);
         foreach ($tableList as $tableItem) {
@@ -92,21 +95,18 @@ switch (Request::get('act', '')) {
             return Response::error('table[' . $errorTable . '] 不存在');
         }
         $data = '';
+        $tableAllInfoObject = [];
         foreach ($tableList as $table) {
-            $tableInfo = DBInfo::db($db)->getTable($table);
-            $tableAllInfo = [
-                'table_name' => $table,
-                'full_fields' => $tableInfo,
-                'table_info' => $db->query("SHOW TABLE STATUS FROM `" . $db->getDatabaseName() . "` LIKE '" . $table . "'")->row,
-                'db' => $db,
 
-            ];
             switch (Request::get('codetype', '')) {
                 case 'apidoc':
-                    $data .= AutoCode::apidoc($tableAllInfo, ['response']);
+                    $data .= AutoCode::apidoc(new DBTable($db, $table), ['response']);
                     break;
                 case 'markdown_doc':
-                    $data .= AutoCode::markdownDoc($tableAllInfo, ['response']);
+                    $data .= AutoCode::markdownDoc(new DBTable($db, $table), ['response']);
+                    break;
+                case 'code_model':
+                    $data .= AutoCode::codeModel(new DBTable($db, $table), ['response']);
                     break;
                 default:
                     $data .= '请选择 输出数据类型';

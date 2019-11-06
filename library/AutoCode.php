@@ -3,25 +3,20 @@
 class AutoCode
 {
 
-    public static function apidoc($tableAllInfo, $ext = [])
+    public static function apidoc(DBTable $dbTable, $ext = [])
     {
-        $fullFields = $tableAllInfo['full_fields'];
-        $tableName = $tableAllInfo['table_name'];
-        $tableMaxName = preg_replace_callback('/_+([a-z])/', function ($matches) {
-            return strtoupper($matches[1]);
-        }, $tableName);
-        $tableMaxName = ucfirst($tableMaxName);
-        $tableInfo = $tableAllInfo['table_info'];
-        $tableInfo['Comment'] = str_replace('表', '', $tableInfo['Comment']);
-        if (empty($tableInfo['Comment'])) {
-            $tableInfo['Comment'] = $tableMaxName;
-        }
+        $fullFields = $dbTable->getFullFields();
+        $tableName = $dbTable->getTableName();
+        $tableMaxName = $dbTable->getModelName();
+        $tableInfo = $dbTable->getTableInfo();
+        $tableInfo['Comment'] = $dbTable->getTableComment();
+
         $needControllerFunctions = ['index', 'show', 'store', 'update', 'destory']; // 需要显示的方法路由表
         $apidocText = '';
         $responseShow = '';
         $responseIndex = '';
         if (in_array('response', $ext)) {
-            $rowData = $tableAllInfo['db']->query(" SELECT * FROM `" . $tableName . "` LIMIT 0,1")->row;
+            $rowData = $dbTable->getRowData();
             if (!empty($rowData)) {
                 $responseShow = Response::jsonBeautify($rowData, '     *');
                 $rowData2 = [
@@ -199,19 +194,13 @@ class AutoCode
         return $apidocText;
     }
 
-    public static function markdownDoc($tableAllInfo, $ext = [])
+    public static function markdownDoc(DBTable $dbTable, $ext = [])
     {
-        $fullFields = $tableAllInfo['full_fields'];
-        $tableName = $tableAllInfo['table_name'];
-        $tableMaxName = preg_replace_callback('/_+([a-z])/', function ($matches) {
-            return strtoupper($matches[1]);
-        }, $tableName);
-        $tableMaxName = ucfirst($tableMaxName);
-        $tableInfo = $tableAllInfo['table_info'];
-        $tableInfo['Comment'] = str_replace('表', '', $tableInfo['Comment']);
-        if (empty($tableInfo['Comment'])) {
-            $tableInfo['Comment'] = $tableMaxName;
-        }
+        $fullFields = $dbTable->getFullFields();
+        $tableName = $dbTable->getTableName();
+        $tableInfo = $dbTable->getTableInfo();
+        $tableInfo['Comment'] = $dbTable->getTableComment();
+
         $needControllerFunctions = ['index', 'show', 'store', 'update', 'destory']; // 需要显示的方法路由表
         $baseUrl = '{{url}}/' . $tableName;
         if (isset($ext['apiprefix'])) {
@@ -219,13 +208,13 @@ class AutoCode
         }
         $baseUrl = '{{url}}/course/' . $tableName;
 
-        $priInfo = self::getPriKeyInfo($fullFields);
+        $priInfo = $dbTable->getPriFieldInfo();
 
         $apidocText = '';
         $responseShow = '';
         $responseIndex = '';
         if (in_array('response', $ext)) {
-            $rowData = $tableAllInfo['db']->query(" SELECT * FROM `" . $tableName . "` LIMIT 0,1")->row;
+            $rowData = $dbTable->getRowData();
             if (!empty($rowData)) {
                 $responseShow = Response::jsonBeautify($rowData);
                 $rowData2 = [
@@ -449,14 +438,111 @@ HTTP/1.1 404 Not Found
         return $apidocText;
     }
 
-    private static function getPriKeyInfo($fullFields)
+    public static function codeModel(DBTable $dbTable, $ext = [])
     {
-        foreach ($fullFields as $item) {
-            if ($item['Key'] == 'PRI') {
-                return $item;
-                break;
+        $fullFields = $dbTable->getFullFields();
+        $tableInfo = $dbTable->getTableInfo();
+        $tableMaxName = $dbTable->getModelName();
+        $tableInfo['Comment'] = $dbTable->getTableComment();
+        $deleteKey = $dbTable->getDeleteField();
+        $castsText = '';
+        foreach ($fullFields as $fullField) {
+            if ($fullField['Type'] == 'json') {
+                $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'array\',';
+            } else if (strpos($fullField['Type'], 'varchar') !== false) {
+                $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'string\',';
+            } else if (strpos($fullField['Type'], 'int') !== false) {
+                $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'integer\',';
+                $casts[$fullField['Field']] = 'int';
+            } else if (strpos($fullField['Type'], 'timestamp') !== false || strpos($fullField['Type'], 'datetime') !== false) {
+                $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'timestamp\',';
+            } else if (strpos($fullField['Type'], 'decimal') !== false) {
+                $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'decimal:' . explode(')', explode(',', $fullField['Type'])[1])[0] . '\',';
             }
         }
+
+        $value = 0;
+        if (!is_numeric($value)) {
+            $value = '[]';
+        } else if (is_array($value)) {
+            $value = json_encode($value, 256);
+        } else if (is_string($value)) {
+            if (is_array(json_decode($value, true))) {
+                $value = json_encode($value, 256);
+            } else {
+                $value = '[]';
+            }
+        }
+
+        $seAttributeText = '';
+        foreach ($fullFields as $fullField) {
+            if ($fullField['Key'] == 'PRI') {
+                continue;
+            }
+
+            $field = $fullField['Field'];
+            $fieldTF = str_replace(' ', '', ucfirst(str_replace('_', ' ', $field)));
+            if ($fullField['Type'] == 'json') {
+                $seAttributeText .= PHP_EOL . '
+    // ' . $field . '
+    public function set' . $fieldTF . 'Attribute($value)
+    {
+        if (empty($value)) {
+            $value = \'[]\';
+        } else if (is_array($value)) {
+            $value = json_encode($value, 256);
+        } else if (is_string($value)) {
+            if (is_array(json_decode($value, true))) {
+                $value = json_encode($value, 256);
+            } else {
+                $value = \'[]\';
+            }
+        }
+        $this->attributes[\'' . $field . '\'] = $value;
+    }';
+            } else if (strpos($fullField['Type'], 'int') !== false || strpos($fullField['Type'], 'bigint') !== false || strpos($fullField['Type'], 'decimal') !== false) {
+                if ($fullField['Null'] == 'NO') {
+                    $seAttributeText .= PHP_EOL . '
+    // ' . $field . '
+    public function set' . $fieldTF . 'Attribute($value)
+    {
+        $this->attributes[\'' . $field . '\'] = empty($value) ? 0 : $value;
+    }';
+
+                }
+            } else if (strpos($fullField['Type'], 'varchar') !== false) {
+                if ($fullField['Null'] == 'NO') {
+                    $seAttributeText .= PHP_EOL . '
+    // ' . $field . '
+    public function set' . $fieldTF . 'Attribute($value)
+    {
+        $this->attributes[\'' . $field . '\'] = empty($value) ? \'\' : $value;
+    }';
+                }
+            }
+        }
+        // 开始数据处理
+        $codeText = file_get_contents(BASE_PATH . '/resources/laravel_template/TemplateMode.php');
+        $fillable = [];
+        foreach ($fullFields as $fullField) {
+            $fillable [] = "        '" . $fullField['Field'] . "',";
+        }
+        $codeText = str_replace('\'{$fillable}\'', PHP_EOL . implode(PHP_EOL, $fillable), $codeText);
+        $codeText = str_replace('TemplateMode', $tableMaxName, $codeText);
+        if ($deleteKey) {
+            $codeText = str_replace('use SoftDeletes;', 'use SoftDeletes;' . PHP_EOL, $codeText);
+            $codeText = str_replace(PHP_EOL . 'use Hyperf\Database\Model\SoftDeletes;', PHP_EOL . PHP_EOL . 'use Hyperf\Database\Model\SoftDeletes;', $codeText);
+            $codeText = str_replace('protected $datas = [\'deleted_at\'];', 'protected $datas = [\'' . $deleteKey . '\'];', $codeText);
+        } else {
+            $codeText = str_replace('use SoftDeletes;', '', $codeText);
+            $codeText = str_replace(PHP_EOL . 'use Hyperf\Database\Model\SoftDeletes;', '', $codeText);
+            $codeText = str_replace('protected $datas = [\'deleted_at\'];', '', $codeText);
+        }
+        if ($castsText) {
+            $codeText = str_replace('\'{$castsText}\'', $castsText, $codeText);
+        }
+        $codeText = str_replace('public $seAttribute;', $seAttributeText, $codeText);
+        return $codeText;
     }
 
 
