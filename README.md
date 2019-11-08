@@ -7,4 +7,3 @@
 php serve.php
 ```
 
-auth develop@wuloves.com
