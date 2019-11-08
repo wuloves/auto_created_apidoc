@@ -87,15 +87,14 @@
                     for (var k in rt) {
                         right_textarea_value += left_option + rt[k] + "\n";
                     }
-                    $("#right_textarea").val(right_textarea_value);
+                    $("#right_textarea").val("\n"+right_textarea_value);
                     break;
                 default:
 
             }
         })
         $("#function_select").val('column_add');
-        // $("#function_select").input();
-        $("#left_option").trigger('oninput');
+        $("#function_select").change();
 
     })
 
