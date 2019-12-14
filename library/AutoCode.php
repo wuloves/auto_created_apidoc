@@ -3,6 +3,7 @@
 class AutoCode
 {
 
+
     public static function apidoc(DBTable $dbTable, $ext = [])
     {
         $fullFields = $dbTable->getFullFields();
@@ -10,6 +11,8 @@ class AutoCode
         $tableMaxName = $dbTable->getModelName();
         $tableInfo = $dbTable->getTableInfo();
         $tableInfo['Comment'] = $dbTable->getTableComment();
+        $tableField = $dbTable->getTableField();
+
 
         $needControllerFunctions = ['index', 'show', 'store', 'update', 'destory']; // 需要显示的方法路由表
         $apidocText = '';
@@ -41,41 +44,27 @@ class AutoCode
         }
 
         foreach ($needControllerFunctions as $needControllerFunction) {
+            $apidocTextParam = '';
+            $apidocTextSuccess = '';
             switch ($needControllerFunction) {
                 case 'index':
                     $apidocText .= '
     /**
-     * @api {get} /' . $tableName . ' ' . $tableInfo['Comment'] . '
+     * @api {get} /' . $tableName . ' 1.列表[' . $tableInfo['Comment'] . ']
      * @apiName index_' . $tableName . '
      * @apiGroup ' . $tableMaxName . '
+     * @apiParam {number} [page=1] 当前页码
      * @apiParam {number} [perPage=15] 每页记录数';
                     //  * @apiParam {string} [include] 可选值：courses 信息(需要增加is_last=1作为条件)
-                    foreach ($fullFields as $item) {
-                        $field = $item['Field'];
-                        $type = $item['Type'];
-                        $comment = $item['Comment'];
-                        if (in_array($field, ['updated_at', 'created_at'])) {
+                    foreach ($tableField as $field => $item) {
+                        if (in_array($field, ['deleted_at', 'trans_table', 'trans_table_primary_key', 'trans_primary_id'])) {
                             continue;
                         }
-                        $datatypeLength = 0;
-                        if (count(explode('(', $type)) > 1) {
-                            $datatype = explode('(', $type)[0];
-                            $datatypeLength = str_replace(')', '', explode('(', $type)[1]);
-                            if (str_replace(',', '', $datatypeLength) != $datatypeLength) {
-                                $datatypeLength = 0;
-                            }
-                        } else {
-                            $datatype = $type;
-                        }
-                        if ($item['Key'] == 'PRI') {
-                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . $tableInfo['Comment'] . '的ID';
-                        } else if (is_null($item['Default'])) {
-                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '');
-                        } else {
-                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . (is_null($item['Default']) ? '' : '=' . (is_numeric($item['Default']) ? $item['Default'] * 1 : $item['Default'])) . '] ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '');
-                        }
+                        $apidocTextParam .= PHP_EOL . '     * @apiParam {' . $item['type'] . '} [' . $field . '] ' . $item['comment'];
+                        $apidocTextSuccess .= PHP_EOL . '     * @apiSuccess {' . $item['type'] . '} ' . $field . ' '
+                            . $item['comment'] . ($item['type'] === 'varchar' && $item['length'] > 0 ? '<br>长度: <code>' . $item['length'] . '</code>' : '');
                     }
-                    $apidocText .= '
+                    $apidocText .= $apidocTextParam . $apidocTextSuccess . '
      *
      * @apiSuccess {type} field desc
      * @apiSuccessExample 成功返回：
@@ -92,34 +81,35 @@ class AutoCode
                 case 'store':
                     $apidocText .= '
     /**
-     * @api {post} /' . $tableName . ' 添加' . $tableInfo['Comment'] . '
+     * @api {post} /' . $tableName . ' 3.添加[' . $tableInfo['Comment'] . ']
      * @apiName store_' . $tableName . '
      * @apiGroup ' . $tableMaxName;
-                    foreach ($fullFields as $item) {
-                        $field = $item['Field'];
-                        $type = $item['Type'];
-                        $comment = $item['Comment'];
-                        if (in_array($field, ['updated_at', 'created_at'])) {
+                    $apidocTextParam = '';
+//                    foreach ($tableField as $field => $item) {
+//                        if (in_array($field, ['updated_at', 'created_at'])) {
+//                            continue;
+//                        }
+//                        $apidocTextParam .= PHP_EOL . '     * @apiParam {' . $item['type'] . '} ' . ((!empty($item['null']) || !is_null($item['default'])) ? '[' . $field . ']' : $field) . ' ' . $item['comment'];
+//                    }
+
+                    foreach ($tableField as $field => $item) {
+                        if ($item['Key'] === 'PRI' || in_array($field, ['deleted_at', 'trans_table', 'trans_table_primary_key', 'trans_primary_id'])) {
                             continue;
                         }
-                        $datatypeLength = 0;
-                        if (count(explode('(', $type)) > 1) {
-                            $datatype = explode('(', $type)[0];
-                            $datatypeLength = str_replace(')', '', explode('(', $type)[1]);
-                            if (str_replace(',', '', $datatypeLength) != $datatypeLength) {
-                                $datatypeLength = 0;
-                            }
-                        } else {
-                            $datatype = $type;
+                        $f = '[' . $field . ']';
+                        if ($item['null'] == 0 && is_null($item['default'])) {
+                            $f = $field;
                         }
-                        if (is_null($item['Default']) && $item['Key'] == '') {
-                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} ' . $field . ' ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '');
-                        } else if (!empty($item['Default'])) {
-                            $apidocText .= PHP_EOL . '     * @apiParam {' . $datatype . '} [' . $field . (is_null($item['Default']) ? '' : '=' . (is_numeric($item['Default']) ? $item['Default'] * 1 : $item['Default'])) . '] ' . ($comment == '' ? $field : $comment) . ($datatype == 'varchar' && $datatypeLength > 0 ? '<br>长度: <code>' . $datatypeLength . '</code>' : '');
+                        if (!is_null($item['Default']) && $item['Default'] != '') {
+                            $f = '[' . $field . '=' . $item['Default'] . ']';
                         }
+//                        $apidocTextParam .= PHP_EOL . '     * @apiParam {' . $item['type'] . '} [' . $field . '] ' . $item['comment'];
+                        $apidocTextParam .= PHP_EOL . '     * @apiParam {' . $item['type'] . '} ' . $f . ' '
+                            . $item['comment'] . ($item['type'] === 'varchar' && $item['length'] > 0 ? '<br>长度: <code>' . $item['length'] . '</code>' : '');
                     }
-                    $apidocText .= '
-     * @apiSuccess {type} field 默认同资源详情
+
+                    $apidocText .= $apidocTextParam . '
+     * @apiSuccess {type} field 默认同列表成功返回参数
      * @apiSuccessExample 成功返回：
      * HTTP/1.1 201 Created
      * 默认同详情
@@ -136,11 +126,11 @@ class AutoCode
                 case 'show':
                     $apidocText .= '
     /**
-     * @api {get} /' . $tableName . '/{id} ' . $tableInfo['Comment'] . '详情
+     * @api {get} /' . $tableName . '/{id} 2.详情[' . $tableInfo['Comment'] . ']
      * @apiName show_' . $tableName . '
      * @apiGroup ' . $tableMaxName . '
      * @apiParam {int} id ' . $tableInfo['Comment'] . '的ID
-     * @apiSuccess {type} field 默认同资源详情
+     * @apiSuccess {type} field 无特殊说明默认同列表成功返回参数
      * @apiSuccessExample 成功返回：
      * HTTP/1.1 200 OK
 ' . $responseShow . '
@@ -153,13 +143,20 @@ class AutoCode
      */' . PHP_EOL . PHP_EOL . PHP_EOL;
                     break;
                 case 'update':
+                    foreach ($tableField as $field => $item) {
+                        if (in_array($field, ['deleted_at', 'trans_table', 'trans_table_primary_key', 'trans_primary_id'])) {
+                            continue;
+                        }
+                        $apidocTextParam .= PHP_EOL . '     * @apiParam {' . $item['type'] . '} ' . '[' . $field . ']' . ' ' . $item['comment'];
+                    }
                     $apidocText .= '
     /**
-     * @api {patch} /' . $tableName . '/{id} 更新' . $tableInfo['Comment'] . '
+     * @api {patch} /' . $tableName . '/{id} 4.修改[' . $tableInfo['Comment'] . ']
      * @apiName update_' . $tableName . '
      * @apiGroup ' . $tableMaxName . '
-     * @apiParam {int} id ' . $tableInfo['Comment'] . '的ID
-     * @apiSuccess {type} field 默认同资源详情
+     * @apiParam {int} id ' . $tableInfo['Comment'] . '的ID [ 下面的参数都为可选,需要更新哪个传哪个,未列出来的默认不支持 ]
+' . $apidocTextParam . '
+     * @apiSuccess {type} field 默认同列表成功返回参数
      * @apiSuccessExample 成功返回：
      * HTTP/1.1 200 OK
      * 默认同详情
@@ -174,11 +171,11 @@ class AutoCode
                 case 'destory':
                     $apidocText .= '
     /**
-     * @api {delete} /' . $tableName . '/{id} 删除' . $tableInfo['Comment'] . '
+     * @api {delete} /' . $tableName . '/{id} 5.删除[' . $tableInfo['Comment'] . ']
      * @apiName destory_' . $tableName . '
      * @apiGroup ' . $tableMaxName . '
      * @apiParam {int} id ' . $tableInfo['Comment'] . '的ID
-     * @apiSuccess {type} field 默认同资源详情
+     * @apiSuccess {type} field 成功无返回
      * @apiSuccessExample 成功返回：
      * HTTP/1.1 204 OK
      *
@@ -450,14 +447,14 @@ HTTP/1.1 404 Not Found
             if ($fullField['Type'] == 'json') {
                 $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'array\',';
             } else if (strpos($fullField['Type'], 'varchar') !== false) {
-                $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'string\',';
+                // $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'string\',';
             } else if (strpos($fullField['Type'], 'int') !== false) {
-                $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'integer\',';
+                // $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'integer\',';
                 $casts[$fullField['Field']] = 'int';
             } else if (strpos($fullField['Type'], 'timestamp') !== false || strpos($fullField['Type'], 'datetime') !== false) {
-                $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'timestamp\',';
+                // $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'timestamp\',';
             } else if (strpos($fullField['Type'], 'decimal') !== false) {
-                $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'decimal:' . explode(')', explode(',', $fullField['Type'])[1])[0] . '\',';
+                // $castsText .= PHP_EOL . '        \'' . $fullField['Field'] . '\' => \'decimal:' . explode(')', explode(',', $fullField['Type'])[1])[0] . '\',';
             }
         }
 
@@ -487,18 +484,7 @@ HTTP/1.1 404 Not Found
     // ' . $field . '
     public function set' . $fieldTF . 'Attribute($value)
     {
-        if (empty($value)) {
-            $value = \'[]\';
-        } else if (is_array($value)) {
-            $value = json_encode($value, 256);
-        } else if (is_string($value)) {
-            if (is_array(json_decode($value, true))) {
-                $value = json_encode($value, 256);
-            } else {
-                $value = \'[]\';
-            }
-        }
-        $this->attributes[\'' . $field . '\'] = $value;
+        $this->attributes[\'' . $field . '\'] = json_encoded($value);
     }';
             } else if (strpos($fullField['Type'], 'int') !== false || strpos($fullField['Type'], 'bigint') !== false || strpos($fullField['Type'], 'decimal') !== false) {
                 if ($fullField['Null'] == 'NO') {
@@ -538,9 +524,7 @@ HTTP/1.1 404 Not Found
             $codeText = str_replace(PHP_EOL . 'use Hyperf\Database\Model\SoftDeletes;', '', $codeText);
             $codeText = str_replace('protected $datas = [\'deleted_at\'];', '', $codeText);
         }
-        if ($castsText) {
-            $codeText = str_replace('\'{$castsText}\'', $castsText, $codeText);
-        }
+        $codeText = str_replace('\'{$castsText}\'', $castsText, $codeText);
         $codeText = str_replace('public $seAttribute;', $seAttributeText, $codeText);
         return $codeText;
     }

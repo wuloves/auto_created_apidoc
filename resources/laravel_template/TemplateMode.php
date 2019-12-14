@@ -6,10 +6,11 @@ use Hyperf\Database\Model\SoftDeletes;
 
 class TemplateMode extends Model
 {
+
     use SoftDeletes;
+    protected $datas = ['deleted_at'];
     protected $fillable = ['{$fillable}'
     ];
-    protected $datas = ['deleted_at'];
     public $seAttribute;
 
     public $casts = ['{$castsText}'

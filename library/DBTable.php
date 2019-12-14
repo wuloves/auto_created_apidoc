@@ -15,6 +15,8 @@ class DBTable
 
     private $tableInfo;
 
+    private $tableField = [];
+
     public function __construct($db, $table)
     {
         $this->db = $db;
@@ -36,13 +38,50 @@ class DBTable
         return $comment;
     }
 
+    public function getTableField()
+    {
+        if (empty($this->tableField)) {
+            $this->getFullFields();
+        }
+        return $this->tableField;
+    }
+
     public function getFullFields()
     {
         if (!$this->fullFields) {
             $sql = 'SHOW FULL FIELDS FROM `' . $this->table . '`;';
-            return $this->fullFields = $this->db->query($sql)->rows;
+            $this->fullFields = $this->db->query($sql)->rows;
         }
-        return $this->fullFields;
+        $fullFields = $this->fullFields;
+        $tableInfo = $this->getTableInfo();
+        foreach ($fullFields as $item) {
+            $field = $item['Field'];
+            $type = $item['Type'];
+            $comment = $item['Comment'];
+            $item['Key'] == 'PRI' && $comment = $tableInfo['Comment'] . '的ID';
+            if (in_array($field, ['updated_at', 'created_at'])) {
+                continue;
+            }
+            $length = 0;
+            if (count(explode('(', $type)) > 1) {
+                $datatype = explode('(', $type)[0];
+                $length = str_replace(')', '', explode('(', $type)[1]);
+                if (str_replace(',', '', $length) != $length) {
+                    $length = 0;
+                }
+            } else {
+                $datatype = $type;
+            }
+            $this->tableField[$field] = [
+                'type' => $datatype,
+                'comment' => $comment,
+                'length' => $length,
+                'default' => $item['Default'],
+                'memo' => '',
+                'null' => (!empty($item['Null']) && $item['Null'] === 'YES') ? 1 : 0, // 是否允许为null
+            ];
+        }
+        return $fullFields;
     }
 
     /**
@@ -76,7 +115,19 @@ class DBTable
 
     public function getRowData()
     {
-        return $this->db->query(" SELECT * FROM `" . $this->table . "` LIMIT 0,1")->row;
+        $d = $this->db->query(" SELECT * FROM `" . $this->table . "` LIMIT 0,1")->row;
+        if (!empty($d)) {
+            foreach ($this->tableField as $field => $item) {
+                switch ($item['type']) {
+                    case 'json':
+                        if (!empty($d[$field])) {
+                            $d[$field] = json_decode($d[$field], true);
+                        }
+                        break;
+                }
+            }
+        }
+        return $d;
     }
 
     public function getPriFieldInfo()
