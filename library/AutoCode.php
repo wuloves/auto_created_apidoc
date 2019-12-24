@@ -478,7 +478,7 @@ HTTP/1.1 404 Not Found
             }
 
             $field = $fullField['Field'];
-            $fieldTF = str_replace(' ', '', ucfirst(str_replace('_', ' ', $field)));
+            $fieldTF = str_replace(' ', '', ucwords(str_replace('_', ' ', $field)));
             if ($fullField['Type'] == 'json') {
                 $seAttributeText .= PHP_EOL . '
     // ' . $field . '
