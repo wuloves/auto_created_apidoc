@@ -458,19 +458,6 @@ HTTP/1.1 404 Not Found
             }
         }
 
-        $value = 0;
-        if (!is_numeric($value)) {
-            $value = '[]';
-        } else if (is_array($value)) {
-            $value = json_encode($value, 256);
-        } else if (is_string($value)) {
-            if (is_array(json_decode($value, true))) {
-                $value = json_encode($value, 256);
-            } else {
-                $value = '[]';
-            }
-        }
-
         $seAttributeText = '';
         foreach ($fullFields as $fullField) {
             if ($fullField['Key'] == 'PRI') {
@@ -525,7 +512,7 @@ HTTP/1.1 404 Not Found
             $codeText = str_replace('protected $datas = [\'deleted_at\'];', '', $codeText);
         }
         $codeText = str_replace('\'{$castsText}\'', $castsText, $codeText);
-        $codeText = str_replace('public $seAttribute;', $seAttributeText, $codeText);
+        $codeText = str_replace('    public $seAttribute;', $seAttributeText, $codeText);
         return $codeText;
     }
 
