@@ -1,5 +1,6 @@
 <html>
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>PHP[文档/代码]自动生成</title>
 </head>
 <body style="">
@@ -95,7 +96,7 @@
     v = {
         getDbSelect: function () {
             $.ajax({
-                url: '/api.php?act=db_list&_=' + (new Date()).valueOf(),
+                url: 'api.php?act=db_list&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -122,7 +123,7 @@
         getAllTable: function () {
             $("#show_tables").html('');
             $.ajax({
-                url: '/api.php?act=table&connect=' + $("#select_database").val() + '&_=' + (new Date()).valueOf(),
+                url: 'api.php?act=table&connect=' + $("#select_database").val() + '&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -153,7 +154,7 @@
                 return;
             }
             $.ajax({
-                url: '/api.php?act=code&codetype=' + $("#codetype").val() + '&connect=' + $("#select_database").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
+                url: 'api.php?act=code&codetype=' + $("#codetype").val() + '&connect=' + $("#select_database").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -207,7 +208,7 @@
                 return;
             }
             $.ajax({
-                url: '/api.php?act=db_add&_=' + (new Date()).valueOf(),
+                url: 'api.php?act=db_add&_=' + (new Date()).valueOf(),
                 type: 'post',
                 data: {
                     addmysql_config_name: $('input[name="addmysql_config_name"]').val(),
