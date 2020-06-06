@@ -1,5 +1,6 @@
 <html>
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>PHP[文档/代码]自动生成</title>
 </head>
 <body style="">
@@ -12,12 +13,12 @@
             <select id="select_db">
             </select>
         </td>
-        <td>
+        <td colspan="2">
             PHP[文档/代码]自动生成工具 (参考框架laravel) <a href="varchar_tools.html" target="_blank">字符串处理工具</a>
         </td>
     </tr>
     <tr class="addmysql_table" style="display: none;">
-        <td colspan="2">
+        <td colspan="3">
             <table class="table_wu" style="width: 100%;height: 100%;font-size: 16px;">
                 <thead>
                 <tr>
@@ -61,13 +62,16 @@
         <td style="width: 100px;">
             <input placeholder="输入表名进行搜索" id="filter_tables">
         </td>
-        <td>
+        <td style="width: 50%;" class="tab_left">
             <select style="width: 100%;" id="codetype">
                 <option value=""> -- 请选择生成代码类型 --</option>
                 <option value="apidoc" selected> -- Apidoc --</option>
                 <option value="markdown_doc"> -- markdownDoc --</option>
                 <option value="code_model"> -- Laravel Model --</option>
             </select>
+        </td>
+        <td style="width: 50%;" class="tab_right">
+            aaaa
         </td>
     </tr>
     </thead>
@@ -77,8 +81,11 @@
             <select multiple="multiple" style="height: 100%;width: 200px;" id="show_tables">
             </select>
         </td>
-        <td>
+        <td colspan="2" class="body_left">
             <textarea style="width: 100%;height: 100%;" id="show_textarea"></textarea>
+        </td>
+        <td colspan="2" class="body_right">
+            <textarea style="width: 100%;height: 100%;"></textarea>
         </td>
     </tr>
     </tbody>
@@ -171,7 +178,7 @@
                 return;
             }
             $.ajax({
-                url: '/api.php?act=code&codetype=' + $("#codetype").val() + '&connect=' + $("#select_connect").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
+                url: '/api.php?act=code&codetype=' + $("#codetype").val() + '&connect=' + $("#select_connect").val() + '&db=' + $("#select_db").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -279,6 +286,16 @@
             return s;
         });
         v.getConnectSelect();
+        // 功能标签切换
+        $(".tab_left").click(function () {
+            $(".tab_left").attr("style", "border-bottom-color: white;width: 50%;");
+            $(".tab_right").attr("style", "white;width: 50%;");
+        });
+        $(".tab_right").click(function () {
+            $(".tab_left").attr("style", "width: 50%;");
+            $(".tab_right").attr("style", "border-bottom-color: white;width: 50%;");
+        });
+        $(".tab_left").click();
     })
 </script>
 

@@ -11,9 +11,10 @@ class TemplateMode extends Model
     protected $datas = ['deleted_at'];
     protected $fillable = ['{$fillable}'
     ];
-    public $seAttribute;
 
     public $casts = ['{$castsText}'
     ];
+    public $seAttribute;
+
 
 }
