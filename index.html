@@ -134,7 +134,6 @@
                         t += '<option value="' + JsonData[k] + '" ' + (i == 0 ? 'selected' : '') + '>' + JsonData[k] + '</option>';
                         i++;
                     }
-                    t += '<option value="add" ' + (i == 0 ? 'selected' : '') + '> -- 添加数据库连接 --</option>';
                     $("#select_db").html(t);
                     $("#select_db").change();
                 },
