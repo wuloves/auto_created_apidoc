@@ -98,7 +98,7 @@
     v = {
         getConnectSelect: function () {
             $.ajax({
-                url: '/api.php?act=connect_list&_=' + (new Date()).valueOf(),
+                url: 'api.php?act=connect_list&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -124,7 +124,7 @@
         getDbSelect: function () {
             $.ajax({
                 // url: '/api.php?act=db_list&_=' + (new Date()).valueOf(),
-                url: '/api.php?act=db_list&codetype=' + $("#codetype").val() + '&connect=' + $("#select_connect").val() + '&_=' + (new Date()).valueOf(),
+                url: 'api.php?act=db_list&codetype=' + $("#codetype").val() + '&connect=' + $("#select_connect").val() + '&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -147,7 +147,7 @@
         getAllTable: function () {
             $("#show_tables").html('');
             $.ajax({
-                url: '/api.php?act=table_list&connect=' + $("#select_connect").val() + '&db=' + $("#select_db").val() + '&_=' + (new Date()).valueOf(),
+                url: 'api.php?act=table_list&connect=' + $("#select_connect").val() + '&db=' + $("#select_db").val() + '&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -178,7 +178,7 @@
                 return;
             }
             $.ajax({
-                url: '/api.php?act=code&codetype=' + $("#codetype").val() + '&connect=' + $("#select_connect").val() + '&db=' + $("#select_db").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
+                url: 'api.php?act=code&codetype=' + $("#codetype").val() + '&connect=' + $("#select_connect").val() + '&db=' + $("#select_db").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -248,7 +248,7 @@
                 return;
             }
             $.ajax({
-                url: '/api.php?act=db_add&_=' + (new Date()).valueOf(),
+                url: 'api.php?act=db_add&_=' + (new Date()).valueOf(),
                 type: 'post',
                 data: {
                     addmysql_config_name: $('input[name="addmysql_config_name"]').val(),
