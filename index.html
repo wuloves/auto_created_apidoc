@@ -7,7 +7,9 @@
     <thead>
     <tr>
         <td style="width: 200px;">
-            <select id="select_database">
+            <select id="select_connect">
+            </select>
+            <select id="select_db">
             </select>
         </td>
         <td>
@@ -45,7 +47,7 @@
                 </tr>
                 <tr>
                     <td>数据库</td>
-                    <td><input name="addmysql_database" value="" placeholder="database"></td>
+                    <td><input name="addmysql_database" value="" placeholder="可不填写, 不填写则默认全部列出"></td>
                 </tr>
                 <tr>
                     <td id="addmysql_error" style="color: red;"></td>
@@ -87,9 +89,9 @@
 <script src="jquery-3.4.1.min.js"></script>
 <script>
     v = {
-        getDbSelect: function () {
+        getConnectSelect: function () {
             $.ajax({
-                url: '/api.php?act=db_list&_=' + (new Date()).valueOf(),
+                url: '/api.php?act=connect_list&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -104,11 +106,33 @@
                         i++;
                     }
                     t += '<option value="add" ' + (i == 0 ? 'selected' : '') + '> -- 添加数据库连接 --</option>';
-                    $("#select_database").html(t);
-                    $("#select_database").change();
+                    $("#select_connect").html(t);
+                    $("#select_connect").change();
                 },
                 error: function (e) {
-                    $("#select_database").html('<option>请求异常, 请刷新</option>');
+                    $("#select_connect").html('<option>请求异常, 请刷新</option>');
+                }
+            });
+        },
+        getDbSelect: function () {
+            $.ajax({
+                // url: '/api.php?act=db_list&_=' + (new Date()).valueOf(),
+                url: '/api.php?act=db_list&codetype=' + $("#codetype").val() + '&connect=' + $("#select_connect").val() + '&_=' + (new Date()).valueOf(),
+                type: 'get',
+                dataType: "json",
+                success: function (JsonData) {
+                    var t = '';
+                    var i = 0;
+                    for (var k in JsonData) {
+                        t += '<option value="' + JsonData[k] + '" ' + (i == 0 ? 'selected' : '') + '>' + JsonData[k] + '</option>';
+                        i++;
+                    }
+                    t += '<option value="add" ' + (i == 0 ? 'selected' : '') + '> -- 添加数据库连接 --</option>';
+                    $("#select_db").html(t);
+                    $("#select_db").change();
+                },
+                error: function (e) {
+                    // $("#select_connect").html('<option>请求异常, 请刷新</option>');
                 }
             });
         },
@@ -116,7 +140,7 @@
         getAllTable: function () {
             $("#show_tables").html('');
             $.ajax({
-                url: '/api.php?act=table&connect=' + $("#select_database").val() + '&_=' + (new Date()).valueOf(),
+                url: '/api.php?act=table_list&connect=' + $("#select_connect").val() + '&db=' + $("#select_db").val() + '&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -147,7 +171,7 @@
                 return;
             }
             $.ajax({
-                url: '/api.php?act=code&codetype=' + $("#codetype").val() + '&connect=' + $("#select_database").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
+                url: '/api.php?act=code&codetype=' + $("#codetype").val() + '&connect=' + $("#select_connect").val() + '&table=' + $("#show_tables").val() + '&_=' + (new Date()).valueOf(),
                 type: 'get',
                 dataType: "json",
                 success: function (JsonData) {
@@ -160,9 +184,9 @@
         }
     };
     $(function () {
-        $("#select_database").change(function () {
+        $("#select_connect").change(function () {
             console.log(this.value);
-            console.log($("#select_database").val());
+            console.log($("#select_connect").val());
             switch (this.value) {
                 case 'add':
                     $(".addmysql_table").show()
@@ -171,8 +195,25 @@
                 default:
                     $(".addmysql_table").hide()
                     $(".doc_table").show();
-                    v.getAllTable();
             }
+            v.getDbSelect();
+        });
+        $("#select_db").change(function () {
+            console.log(this.value);
+            console.log($("#select_connect").val());
+            console.log($("#select_db").val());
+            v.getAllTable();
+            // switch (this.value) {
+            //     case 'add':
+            //         $(".addmysql_table").show()
+            //         $(".doc_table").hide();
+            //         break;
+            //     default:
+            //         $(".addmysql_table").hide()
+            //         $(".doc_table").show();
+            //         v.getAllTable();
+            // }
+            // v.getDbSelect();
         });
 
         $("#filter_tables").bind('input propertychange', function () {
@@ -195,7 +236,6 @@
                 || $('input[name="addmysql_username"]').val() == ''
                 || $('input[name="addmysql_password"]').val() == ''
                 || $('input[name="addmysql_port"]').val() == ''
-                || $('input[name="addmysql_database"]').val() == ''
             ) {
                 $("#addmysql_error").html('配置未填写完整');
                 return;
@@ -224,21 +264,21 @@
                         i++;
                     }
                     t += '<option value="add" ' + (i == 0 ? 'selected' : '') + '> -- 添加数据库连接 --</option>';
-                    $("#select_database").html(t);
-                    $("#select_database").change();
+                    $("#select_connect").html(t);
+                    $("#select_connect").change();
                 },
                 error: function (e) {
                     console.log(e.responseJSON.message);
                     $("#addmysql_error").html(e.responseJSON.message);
-                    $("#select_database").html('<option>' + e.responseJSON.message + '</option>');
+                    $("#select_connect").html('<option>' + e.responseJSON.message + '</option>');
                 }
             });
         })
-        v.getDbSelect();
         $('input[name="addmysql_config_name"]').val(function () {
             var s = Date.parse(new Date());
             return s;
         });
+        v.getConnectSelect();
     })
 </script>
 

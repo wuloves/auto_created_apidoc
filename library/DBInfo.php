@@ -18,10 +18,10 @@ class DBInfo
     // 显示所有的表
     public function getTable($tables = null)
     {
-        if ($tables){
-            $sql = 'SHOW FULL FIELDS FROM `' . $tables .'`;';
+        if ($tables) {
+            $sql = 'SHOW FULL FIELDS FROM `' . $tables . '`;';
             return $this->db->query($sql)->rows;
-        }else{
+        } else {
             $sql = 'SHOW TABLES';
             $databaseName = $this->db->getDatabaseName();
             $r = [];
@@ -30,6 +30,17 @@ class DBInfo
             }
             return $r;
         }
+    }
+
+    public function getDatabase()
+    {
+        $sql = 'SHOW DATABASES;';
+        return $this->db->query($sql)->rows;
+    }
+
+    public function select($sql)
+    {
+        return $this->db->query($sql)->rows;
     }
 
 

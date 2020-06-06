@@ -35,7 +35,7 @@ exit;
 
 getDbConfigs($configPath, $configDb, $configSelect, $safeChar);
 switch (Request::get('act', '')) {
-    case 'db_list':
+    case 'connect_list':
         return Response::item($configSelect);
         break;
     case 'db_add':
@@ -72,12 +72,32 @@ $hostname = $configDb[$useDb]['hostname'];
 $username = $configDb[$useDb]['username'];
 $password = $configDb[$useDb]['password'];
 $database = $configDb[$useDb]['database'];
+if ($database == '*' || empty($database)) {
+    $database = Request::get('db');
+}
 $port = $configDb[$useDb]['port'];
 
 $db = new DB($hostname, $username, $password, $database, $port);
 
 switch (Request::get('act', '')) {
-    case 'table':
+    case 'db_list':
+        $connect = Request::get('connect');
+        if (empty($connect)) {
+            return Response::error(['error' => '请选择连接']);
+        }
+        // 判断是否填写了表名, 如果填写了, 则只能单选
+        if (!empty($configDb[$useDb]['database']) && $configDb[$useDb]['database'] != '*') {
+            return Response::item([$configDb[$useDb]['database']]);
+        }
+        $dbb = [];
+        foreach (DBInfo::db($db)->getDatabase() as $item) {
+            if (!in_array($item['Database'], ['performance_schema', 'information_schema', 'sys', 'mysql'])) {
+                $dbb[] = $item['Database'];
+            }
+        }
+        return Response::item($dbb);
+        break;
+    case 'table_list':
         return Response::item(DBInfo::db($db)->getTable());
         break;
     case 'code':
