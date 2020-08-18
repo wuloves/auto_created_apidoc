@@ -57,6 +57,7 @@ class AutoCode
      * @apiParam {number} [perPage=15] 每页记录数';
                     //  * @apiParam {string} [include] 可选值：courses 信息(需要增加is_last=1作为条件)
                     foreach ($tableField as $field => $item) {
+                        $item['type'] = str_replace([' unsigned'],'',$item['type']);
                         if (in_array($field, ['deleted_at', 'trans_table', 'trans_table_primary_key', 'trans_primary_id'])) {
                             continue;
                         }
@@ -93,6 +94,7 @@ class AutoCode
 //                    }
 
                     foreach ($tableField as $field => $item) {
+                        $item['type'] = str_replace([' unsigned'],'',$item['type']);
                         if ($item['Key'] === 'PRI' || in_array($field, ['deleted_at', 'trans_table', 'trans_table_primary_key', 'trans_primary_id'])) {
                             continue;
                         }
@@ -144,6 +146,7 @@ class AutoCode
                     break;
                 case 'update':
                     foreach ($tableField as $field => $item) {
+                        $item['type'] = str_replace([' unsigned'],'',$item['type']);
                         if (in_array($field, ['deleted_at', 'trans_table', 'trans_table_primary_key', 'trans_primary_id'])) {
                             continue;
                         }
